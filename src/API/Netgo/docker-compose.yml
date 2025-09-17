@@ -1,0 +1,6 @@
+services:
+  netgo.api:
+    image: ${DOCKER_REGISTRY-}netgoapi
+    build:
+      context: .
+      dockerfile: Netgo.API/Dockerfile

@@ -1,0 +1,103 @@
+############################
+# .NET / ASP.NET Core
+############################
+
+# Build results
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# Publish outputs
+publish/
+out/
+artifacts/
+
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Visual Studio cache/options directory
+.vs/
+
+# Entity Framework
+Migrations/
+
+# NuGet
+*.nupkg
+*.snupkg
+*.nuspec
+packages/
+*.nuget.props
+*.nuget.targets
+
+# Local database
+*.mdf
+*.ldf
+*.ndf
+
+############################
+# Node.js / Next.js
+############################
+
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Production
+.next/
+out/
+build/
+
+# Testing
+coverage/
+.vitest/
+
+# Env files
+.env
+.env.local
+.env.*.local
+
+# Misc
+.DS_Store
+*.pem
+
+############################
+# IDEs and Editors
+############################
+
+# Visual Studio
+.vs/
+*.vcxproj.user
+*.vscode/*
+
+# VS Code (izin verilen ayarlar hariç)
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Rider / IntelliJ
+.idea/
+*.iml
+
+############################
+# OS generated files
+############################
+
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.swp
+*.tmp
+*.temp
+*.log
+*.bak
+*.orig

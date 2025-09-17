@@ -1,0 +1,2 @@
+dotnet ef migrations add Chat_Message_Category --project Netgo.Persistence --startup-project Netgo.API --context NetgoDbContext
+dotnet ef migrations add Init --project Netgo.Identity --startup-project Netgo.API --context NetgoIdentityDbContext

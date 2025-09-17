@@ -1,0 +1,54 @@
+version: '3.9'
+
+services:
+  netgo.api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ASPNETCORE_HTTPS_PORTS=8081 
+      - ConnectionStrings__MasterDb=Server=netgo.masterDb;Database=NetgoDb1;User Id=sa;Password=Strong!Passw0d;TrustServerCertificate=True;
+      - ConnectionStrings__IdentityDb=Server=netgo.identityDb;Database=NetgoDb2;User Id=sa;Password=Strong!Passw0d;TrustServerCertificate=True;
+      - MINIO_ENDPOINT=netgo.minio:9000
+      - MINIO_ACCESS_KEY=minio
+      - MINIO_SECRET_KEY=minio123
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
+      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
+    depends_on:
+      - netgo.masterDb
+      - netgo.identityDb
+      - netgo.minio
+
+  netgo.masterDb:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      SA_PASSWORD: "Strong!Passw0d"
+      ACCEPT_EULA: "Y"
+    ports:
+      - "1433:1433"
+
+  netgo.identityDb:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      SA_PASSWORD: "Strong!Passw0d"
+      ACCEPT_EULA: "Y"
+    ports:
+      - "1434:1433"
+
+  netgo.minio:
+    image: minio/minio
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio123
+    ports:
+      - "9000:9000"
+    command: server /data
+    volumes:
+      - ./minio_data:/data
+      
+
