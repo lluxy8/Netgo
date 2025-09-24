@@ -1,12 +1,29 @@
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.OpenApi.Models;
 using Netgo.API.Hubs;
 using Netgo.Application;
+using Netgo.Application.Features.Products.Requests.Command;
+using Netgo.Domain.Events.Products;
 using Netgo.Identity;
 using Netgo.Infrastructure;
 using Netgo.Persistence;
+using Serilog;
+using System.Reflection;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Host.UseSerilog((context, config) => 
+    config.ReadFrom.Configuration(context.Configuration));
+
+builder.Services.AddMediatR(cfg =>
+{
+    cfg.RegisterServicesFromAssemblies(
+        Assembly.GetExecutingAssembly(),     
+        typeof(CreateProductCommand).Assembly,
+        typeof(ProductUpdatedEvent).Assembly  
+    );
+});
 
 builder.Services.AddIdentityServices(builder.Configuration);
 builder.Services.AddInfrastructureServices(builder.Configuration);
@@ -43,6 +60,20 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+builder.Services.AddOpenApiDocument();
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddSlidingWindowLimiter("sliding", limiterOptions =>
+    {
+        limiterOptions.PermitLimit = 100; 
+        limiterOptions.Window = TimeSpan.FromMinutes(1);
+        limiterOptions.SegmentsPerWindow = 6; 
+        limiterOptions.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        limiterOptions.QueueLimit = 10;
+    });
+});
+
 builder.Services.AddCors(builder =>
 {
     builder.AddPolicy("AllowFrontend", policy =>
@@ -54,18 +85,22 @@ builder.Services.AddCors(builder =>
     });
 });
 
+
 var app = builder.Build();
 
 
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
+    app.UseOpenApi();
     app.UseSwaggerUI();
 }
 
 app.UseAuthentication();
 
 app.UseHttpsRedirection();
+
+app.UseRateLimiter();
 
 app.UseAuthorization();
 

@@ -4,10 +4,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using Netgo.Application.Common;
 using Netgo.Application.Contracts.Identity;
 using Netgo.Application.Models;
 using Netgo.Application.Models.Identity;
 using Netgo.Identity.Services;
+using System.Security.Claims;
 using System.Text;
 
 namespace Netgo.Identity
@@ -22,6 +24,10 @@ namespace Netgo.Identity
 
             services.Configure<EmailSettings>(
                 configuration.GetSection("EmailSettings")
+            );
+
+            services.Configure<MinioSettings>(
+                configuration.GetSection("MinioSettings")
             );
 
             services.AddIdentity<ApplicationUser, IdentityRole>()
@@ -62,7 +68,38 @@ namespace Netgo.Identity
                             context.Token = context.Request.Cookies["authToken"];
                         }
                         return Task.CompletedTask;
-                    }
+                    },
+
+                    
+
+                    OnTokenValidated = async context =>
+                    {
+                        var principal = context.Principal;
+                        if (principal is null)
+                        {
+                            context.Fail("Unauthorized");
+                            return;
+                        }
+
+                        var userManager = context.HttpContext.RequestServices.GetRequiredService<UserManager<ApplicationUser>>();
+                        
+                        var uid = principal.FindFirstValue(CustomClaimTypes.Uid);
+                        var user = await userManager.FindByIdAsync(uid!);
+
+                        if (user == null)
+                        {
+                            context.Fail("Unauthorized");
+                            return;
+                        }
+
+                        var securityStampFromDb = await userManager.GetSecurityStampAsync(user);
+                        var securityStampFromToken = principal.FindFirstValue(CustomClaimTypes.SecurityStamp);
+
+                        if (securityStampFromToken != securityStampFromDb)
+                        {
+                            context.Fail("Token is no longer valid.");
+                        }
+                    }                   
                 };
             });
 

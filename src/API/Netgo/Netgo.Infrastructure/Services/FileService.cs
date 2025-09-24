@@ -1,94 +1,84 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Amazon.S3;
+using Amazon.S3.Model;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Options;
 using Netgo.Application.Contracts.Infrastructure;
+using Netgo.Application.Models;
 
 namespace Netgo.Infrastructure.Services
 {
-    //// FIX
     public class S3FileService : IFileService
     {
-        /*
         private readonly IAmazonS3 _s3Client;
         private readonly string _bucketName;
 
-        public S3FileService(IAmazonS3 s3Client, string bucketName)
+        public S3FileService(IOptions<MinioSettings> options)
         {
-            _s3Client = s3Client;
-            _bucketName = bucketName;
+            var settings = options.Value;
 
-            var bucketExists = _s3Client.ListBucketsAsync().Result.Buckets.Any(b => b.BucketName == _bucketName);
-            if (!bucketExists)
+            _bucketName = settings.bucketName;
+
+            var config = new AmazonS3Config
             {
-                _s3Client.PutBucketAsync(new PutBucketRequest
-                {
-                    BucketName = _bucketName
-                }).Wait();
-            }
+                ServiceURL = settings.Endpoint,
+                ForcePathStyle = true
+            };
+
+            _s3Client = new AmazonS3Client(settings.AccessKey, settings.SecretKey, config);
         }
-        */
 
         public async Task<string> SaveFileAsync(string folderName, IFormFile file)
         {
-            /*
-            string key = $"{folderName}/{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+            var key = $"{folderName}/{file.FileName}";
 
             using var stream = file.OpenReadStream();
-            var request = new PutObjectRequest
+
+            var putRequest = new PutObjectRequest
             {
                 BucketName = _bucketName,
                 Key = key,
-                InputStream = stream
+                InputStream = stream,
+                ContentType = file.ContentType
             };
 
-            await _s3Client.PutObjectAsync(request);
+            await _s3Client.PutObjectAsync(putRequest);
 
-            return key; 
-            */
-
-            await Task.Delay(1);
-            return $"{folderName}/{Guid.NewGuid}.png";
+            return key;
         }
 
         public async Task<IEnumerable<string>> GetFilesAsync(string folderName)
         {
-            /*
             var request = new ListObjectsV2Request
             {
                 BucketName = _bucketName,
-                Prefix = folderName + "/"
+                Prefix = $"{folderName}/"
             };
 
             var response = await _s3Client.ListObjectsV2Async(request);
+
             return response.S3Objects.Select(o => o.Key);
-
-            */
-
-            await Task.Delay(1);
-            return [$"{folderName}/orne1k.png", $"{folderName}/ornek2.png"];
         }
 
         public async Task DeleteFileAsync(string folderName, string fileName)
         {
-            /*
-            string key = $"{folderName}/{fileName}";
+            var key = $"{folderName}/{fileName}";
             await _s3Client.DeleteObjectAsync(_bucketName, key);
-            */
-
-            await Task.Delay(1);
         }
 
         public async Task DeleteFolderAsync(string folderName)
         {
-            /*
-            var files = await GetFilesAsync(folderName);
-
-            foreach (var key in files)
+            var request = new ListObjectsV2Request
             {
-                await _s3Client.DeleteObjectAsync(_bucketName, key);
+                BucketName = _bucketName,
+                Prefix = $"{folderName}/"
+            };
+
+            var response = await _s3Client.ListObjectsV2Async(request);
+
+            foreach (var obj in response.S3Objects)
+            {
+                await _s3Client.DeleteObjectAsync(_bucketName, obj.Key);
             }
-
-            */
-
-            await Task.Delay(1);
         }
     }
 }
