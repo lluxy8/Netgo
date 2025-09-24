@@ -1,8 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Netgo.Application.Common;
-using Newtonsoft.Json.Linq;
-using System.IO;
-using System.Text;
 
 namespace Netgo.API
 {
@@ -17,26 +14,16 @@ namespace Netgo.API
 
         public async Task ExecuteResultAsync(ActionContext context)
         {
-            object valueToReturn = _result;
-
-            if (!_result.IsSuccess)
+            var valueToReturn = _result switch
             {
-                var json = new JObject();
-                json["error"] = _result.ErrorMessage;
-                valueToReturn = json.ToString();
-            }
-
-
-            if (!_result.IsGeneric)
-            {
-                valueToReturn = string.Empty;
-            }
-
-            if (_result.IsGeneric && _result.IsSuccess)
-            {
-                valueToReturn = _result.GetType().GetProperty("Value")?.GetValue(_result)!;
-            }
-
+                { IsSuccess: false } => new
+                {
+                    code = _result.StatusCode,
+                    message = _result.ErrorMessage
+                },
+                { HasValue: false } => string.Empty,
+                _ => _result.Value   
+            };
 
             var objectResult = new ObjectResult(valueToReturn)
             {

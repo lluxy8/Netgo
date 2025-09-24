@@ -6,6 +6,7 @@ using Netgo.Application.Contracts.Identity;
 using Netgo.Application.Exceptions;
 using Netgo.Application.Models.Identity;
 using Netgo.Identity.Common;
+using Newtonsoft.Json.Linq;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -42,16 +43,15 @@ namespace Netgo.Identity.Services
                 throw new BadRequestException("Invalid email or password");
             }
 
+            await _userManager.UpdateSecurityStampAsync(user);
 
             JwtSecurityToken jwtSecurityToken = await GenerateToken(user);
 
-            AuthResponse response = new AuthResponse
+            return new AuthResponse
             {
                 Id = user.Id,
                 Token = new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken)
             };
-
-            return response;
         }
 
         public async Task<RegistrationResponse> Register(RegistrationRequest request)
@@ -85,7 +85,7 @@ namespace Netgo.Identity.Services
 
                 if (result.Succeeded)
                 {
-                    await _userManager.AddToRoleAsync(user, "User");
+                    await _userManager.AddToRoleAsync(user, UserRoles.User);
                     return new RegistrationResponse() { UserId = user.Id };
                 }
                 else
@@ -118,12 +118,15 @@ namespace Netgo.Identity.Services
                 roleClaims.Add(new Claim(ClaimTypes.Role, roles[i]));
             }
 
+            var securityStamp = await _userManager.GetSecurityStampAsync(user);
+
             var claims = new[]
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.UserName),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
-                new Claim(CustomClaimTypes.Uid, user.Id)
+                new Claim(CustomClaimTypes.Uid, user.Id),
+                new Claim(CustomClaimTypes.SecurityStamp, securityStamp) 
             }
             .Union(userClaims)
             .Union(roleClaims);
@@ -137,8 +140,10 @@ namespace Netgo.Identity.Services
                 claims: claims,
                 expires: DateTime.UtcNow.AddMinutes(_jwtSettings.DurationInMinutes),
                 signingCredentials: signingCredentials);
+
             return jwtSecurityToken;
         }
+
 
     }
 }

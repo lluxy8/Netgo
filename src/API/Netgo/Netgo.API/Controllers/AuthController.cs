@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Netgo.Application.DTOs.Auth;
 using Netgo.Application.Features.Users.Requests.Command;
 using Netgo.Application.Features.Users.Requests.Query;
@@ -10,6 +11,7 @@ namespace Netgo.API.Controllers
 {
     [ApiController]
     [Route("api/auth")]
+    [EnableRateLimiting("sliding")]
     public class AuthController : ControllerBase
     {
         private readonly IMediator _mediator;
@@ -28,12 +30,12 @@ namespace Netgo.API.Controllers
 
             if(result.IsSuccess)
             {
-                SetAuthCookie(result.Value.Token);
+                SetAuthCookie(result.Data.Token);
 
                 return Ok(new AuthResponseDTO
                 {
-                    Id = result.Value.Id,
-                    Token = result.Value.Token
+                    Id = result.Data.Id,
+                    Token = result.Data.Token
                 });
             }
 

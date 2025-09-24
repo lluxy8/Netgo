@@ -1,12 +1,14 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using MediatR;
 using Microsoft.EntityFrameworkCore.Storage;
 using Netgo.Application.Contracts.Persistence;
+using Netgo.Domain.Common;
 
 namespace Netgo.Persistence
 {
     public class UnitOfWork : IUnitOfWork, IAsyncDisposable
     {
         private readonly NetgoDbContext _context;
+        private readonly IMediator _mediator;
         private IDbContextTransaction? _currentTransaction;
 
         public IProductRepository Products { get; }
@@ -21,9 +23,11 @@ namespace Netgo.Persistence
             IProductDetailRepository productDetails,
             ICategoryRepository categories,
             IChatRepository chats,
-            IMessageRepository messages)
+            IMessageRepository messages,
+            IMediator mediator)
         {
             _context = context;
+            _mediator = mediator;
             Products = products;
             ProductDetails = productDetails;
             Categories = categories;
@@ -42,6 +46,23 @@ namespace Netgo.Persistence
             return await _context.SaveChangesAsync(cancellationToken);
         }
 
+        public async Task DispatchDomainEventsAsync(CancellationToken cancellation = default)
+        {
+            var entities = _context.ChangeTracker
+                .Entries<DomainEntity>()
+                .Where(x => x.Entity.DomainEvents != null && x.Entity.DomainEvents.Count != 0);
+
+            var events = entities
+                .SelectMany(x => x.Entity.DomainEvents)
+                .ToList();
+
+            entities.ToList()
+                .ForEach(x => x.Entity.ClearDomainEvents());
+
+            foreach (var item in events)
+                await _mediator.Publish(item, cancellation);
+        }
+
         public async Task CommitTransactionAsync(CancellationToken cancellationToken = default)
         {
             if (_currentTransaction == null) return;
@@ -50,6 +71,7 @@ namespace Netgo.Persistence
             {
                 await _context.SaveChangesAsync(cancellationToken);
                 await _currentTransaction.CommitAsync(cancellationToken);
+                await DispatchDomainEventsAsync(cancellationToken);
             }
             catch
             {
