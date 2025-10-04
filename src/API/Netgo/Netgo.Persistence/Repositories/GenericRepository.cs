@@ -1,6 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Netgo.Application.Common;
 using Netgo.Application.Contracts.Persistence;
 using Netgo.Domain.Common;
+using System.Linq;
+using System.Linq.Expressions;
 
 namespace Netgo.Persistence.Repositories
 {
@@ -26,8 +29,39 @@ namespace Netgo.Persistence.Repositories
 
         public async Task<IReadOnlyList<T>> GetAll()
         {
-            return await _context.Set<T>().AsNoTracking().ToListAsync();
+            return await _context.Set<T>()
+                .AsNoTracking()
+                .OrderByDescending(x => x.DateCreated)
+                .ToListAsync();
         }
+
+        public async Task<PagedResult<T>> GetAllFilteredPaged(
+            Expression<Func<T, bool>>? filter = null,
+            int page = 1,
+            int pageSize = 10)
+        {
+            IQueryable<T> query = _context.Set<T>().AsNoTracking();
+
+            if (filter != null)
+                query = query.Where(filter);
+
+            var totalCount = await query.CountAsync();
+
+            var items = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .OrderByDescending(x => x.DateCreated)
+                .ToListAsync();
+
+            return new PagedResult<T>
+            {
+                Items = items,
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize
+            };
+        }
+
 
         public async Task<T?> GetById(Guid Id)
         {

@@ -2,15 +2,13 @@ version: '3.9'
 
 services:
   netgo.api:
+    container_name: api
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTP_PORTS=8080
       - ASPNETCORE_HTTPS_PORTS=8081 
-      - ConnectionStrings__MasterDb=Server=netgo.masterDb;Database=NetgoDb1;User Id=sa;Password=Strong!Passw0d;TrustServerCertificate=True;
-      - ConnectionStrings__IdentityDb=Server=netgo.identityDb;Database=NetgoDb2;User Id=sa;Password=Strong!Passw0d;TrustServerCertificate=True;
-      - MINIO_ENDPOINT=netgo.minio:9000
-      - MINIO_ACCESS_KEY=minio
-      - MINIO_SECRET_KEY=minio123
+      - ConnectionStrings__MasterDb=Server=netgo.masterDb;Database=netgo_master_db;User Id=sa;Password=Strong!Passw0d;TrustServerCertificate=True;
+      - ConnectionStrings__IdentityDb=Server=netgo.identityDb;Database=netgo_identity_db;User Id=sa;Password=Strong!Passw0d;TrustServerCertificate=True;
     ports:
       - "8080:8080"
       - "8081:8081"
@@ -23,9 +21,13 @@ services:
       - netgo.masterDb
       - netgo.identityDb
       - netgo.minio
+      - netgo.redis
+      - netgo.redisinsight
+      - netgo.seq
 
   netgo.masterDb:
     image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: master_db
     environment:
       SA_PASSWORD: "Strong!Passw0d"
       ACCEPT_EULA: "Y"
@@ -34,21 +36,52 @@ services:
 
   netgo.identityDb:
     image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: identity_db
     environment:
       SA_PASSWORD: "Strong!Passw0d"
       ACCEPT_EULA: "Y"
     ports:
       - "1434:1433"
-
+  
   netgo.minio:
-    image: minio/minio
-    environment:
-      MINIO_ROOT_USER: minio
-      MINIO_ROOT_PASSWORD: minio123
+    image: quay.io/minio/minio:latest
+    container_name: minio
     ports:
-      - "9000:9000"
-    command: server /data
+      - "9000:9000"   # S3 API
+      - "9001:9001"   # Web UI
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin123
     volumes:
-      - ./minio_data:/data
-      
+      - ./data:/data
+    command: server /data --console-address ":9001"
+    
+  netgo.redis:
+    image: redis:alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+
+  netgo.redisinsight:
+    image: redis/redisinsight:latest
+    container_name: netgo.redisinsight
+    ports:
+      - "5540:5540"
+    depends_on:
+      - netgo.redis
+
+  netgo.seq:
+    image: datalust/seq:latest
+    container_name: seq
+    ports:
+      - "5341:80"
+    environment:
+      - ACCEPT_EULA=Y
+      - SEQ_FIRSTRUN_ADMINPASSWORD=seqadmin123
+    volumes:
+      - seq-data:/data
+
+volumes:
+  seq-data: 
+ 
 

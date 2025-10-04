@@ -87,6 +87,8 @@ namespace Netgo.Identity.Services
             if(!result.Succeeded)
                 throw new BadRequestException(
                     string.Join(", ", result.Errors.Select(e => e.Description)));
+
+            await _userManager.UpdateSecurityStampAsync(user);
         }
 
         public async Task<string> GeneratePasswordResetToken(string userId, string oldPassword)
@@ -110,10 +112,15 @@ namespace Netgo.Identity.Services
 
             return await _userManager.CheckPasswordAsync(user, password);
         }
+
         public async Task<string> GetUserEmail(string userId)
             => (await GetUser(userId)).Email;
 
-
+        public async Task Logout(string userId)
+        {
+            var user = await GetUserOrThrowIfNotFound(userId);
+            await _userManager.UpdateSecurityStampAsync(user);
+        }
 
         private static User MapUser(ApplicationUser user)
             => new User

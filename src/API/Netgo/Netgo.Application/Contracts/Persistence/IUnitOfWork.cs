@@ -7,6 +7,7 @@
         public ICategoryRepository Categories { get; }
         public IChatRepository Chats { get; }
         public IMessageRepository Messages { get; }
+        Task DispatchDomainEventsAsync(CancellationToken cancellation = default);
         Task BeginTransactionAsync(CancellationToken cancellationToken = default);
         Task CommitTransactionAsync(CancellationToken cancellationToken = default);
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
