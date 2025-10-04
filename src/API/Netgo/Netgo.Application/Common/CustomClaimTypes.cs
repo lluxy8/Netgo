@@ -4,5 +4,6 @@
     {
 
         public const string Uid = "uid";
+        public const string SecurityStamp = "SecurityStamp";
     }
 }

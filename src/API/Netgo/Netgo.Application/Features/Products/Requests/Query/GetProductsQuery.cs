@@ -6,6 +6,6 @@ namespace Netgo.Application.Features.Products.Requests.Query
 {
     public class GetProductsQuery : IRequest<Result<List<ListProductDTO>>>
     {
-        // filter 
+        public required GetProductsDTO Filter { get; set; }
     }
 }

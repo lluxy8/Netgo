@@ -7,6 +7,7 @@ using Netgo.Application.Contracts.Persistence;
 using Netgo.Application.DTOs.Product.Validators;
 using Netgo.Application.Exceptions;
 using Netgo.Application.Features.Products.Requests.Command;
+using Netgo.Application.Models.Identity;
 using Netgo.Domain;
 
 namespace Netgo.Application.Features.Products.Handlers.Command
@@ -46,10 +47,9 @@ namespace Netgo.Application.Features.Products.Handlers.Command
             if (!categoryExists)
                 throw new NotFoundException("Category", request.ProductDto.CategoryId);
 
-
-            var user = await _userService.GetUser(request.ProductDto.UserId.ToString());
-            if(user is null)
-                throw new NotFoundException(nameof(user), request.ProductDto.UserId);
+            var userExists = await _userService.UserExists(request.ProductDto.UserId.ToString());
+            if(!userExists)
+                throw new NotFoundException("User", request.ProductDto.UserId);
 
             var product = _mapper.Map<Product>(request.ProductDto);
             product.Images = [];
@@ -66,15 +66,7 @@ namespace Netgo.Application.Features.Products.Handlers.Command
             }
 
             await _unitOfWork.Products.Insert(product);
-
-            await _emailService.Send(new Models.Email
-            {
-                To = user.Email,
-                Body = $"""
-                    You created a new product "{product.Title}". 
-                """,
-                Subject = "Product created successfully."
-            });
+            product.Created();
 
             return Result<Guid>.Success(product.Id);
         }

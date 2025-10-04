@@ -1,4 +1,5 @@
 ﻿using Netgo.Domain.Common;
+using Netgo.Domain.Events.Products;
 
 namespace Netgo.Domain
 {
@@ -15,5 +16,11 @@ namespace Netgo.Domain
         public Category Category { get; set; }
         public List<ProductDetail> Details { get; set; }
         public List<string> Images { get; set; }
+
+        public Product() { }
+
+        public void Created() => AddDomainEvent(new ProductCreatedEvent(this));
+        public void Updated(Product oldProduct) => AddDomainEvent(new ProductUpdatedEvent(oldProduct, this));
+        public void Sold() => AddDomainEvent(new ProductSoldEvent(this));
     }
 }
