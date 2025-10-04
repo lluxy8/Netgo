@@ -24,6 +24,5 @@ namespace Netgo.Application.Features.Users.Handlers.Command
 
             return Result.Success();
         }
-
     }
 }

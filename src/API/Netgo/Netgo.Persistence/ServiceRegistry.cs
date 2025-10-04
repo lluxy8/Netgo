@@ -15,17 +15,12 @@ namespace Netgo.Persistence
                     configuration.GetConnectionString("MasterDb"),
                     b => b.MigrationsAssembly(typeof(NetgoDbContext).Assembly.FullName)));
 
-            services.AddStackExchangeRedisCache(o => 
-                o.Configuration = configuration.GetConnectionString("Redis"));
-
             services.AddScoped<IProductRepository, ProductRepository>();
             services.AddScoped<IProductDetailRepository, ProductDetailRepository>();
             services.AddScoped<ICategoryRepository, CategoryRepository>();
             services.AddScoped<IMessageRepository, MessageRepository>();
             services.AddScoped<IChatRepository, ChatRepository>();
             services.AddScoped<IUnitOfWork, UnitOfWork>();
-
-            services.Decorate<IProductRepository, CachedProductRepository>();
 
             return services;
         }

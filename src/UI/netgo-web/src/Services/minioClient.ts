@@ -1,1 +1,0 @@
-export const minioBaseUrl = import.meta.env.VITE_MINIO_BASE;

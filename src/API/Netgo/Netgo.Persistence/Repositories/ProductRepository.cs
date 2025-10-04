@@ -5,9 +5,11 @@ using Netgo.Domain;
 namespace Netgo.Persistence.Repositories
 {
     public class ProductRepository : GenericRepository<Product>, IProductRepository
-    { 
+    {
+        private readonly NetgoDbContext _context;   
         public ProductRepository(NetgoDbContext context) : base(context)
         {
+            _context = context;
         }
 
         public Task<List<Product>> GetProductsByUserId(Guid userId)

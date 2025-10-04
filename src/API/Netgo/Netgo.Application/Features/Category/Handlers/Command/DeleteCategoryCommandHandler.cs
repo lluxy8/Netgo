@@ -43,7 +43,7 @@ namespace Netgo.Application.Features.Category.Handlers.Command
                     i++;
                 }
 
-                _logger.LogInformation("Successfully moved {num} Product to default category.", i);
+                _logger.LogInformation("Successfully moved {num} Producst to default category.", i);
             }
             catch
             {

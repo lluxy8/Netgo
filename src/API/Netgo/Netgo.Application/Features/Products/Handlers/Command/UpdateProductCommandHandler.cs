@@ -37,17 +37,12 @@ namespace Netgo.Application.Features.Products.Handlers.Command
             if (!validationResult.IsValid)
                 throw new ValidationException(validationResult);
 
-            var product = await _unitOfWork.Products.GetById(request.ProductDto.Id)
-                ?? throw new NotFoundException(nameof(Product), request.ProductDto.Id);
-
-            if (product.DateSold != null)
-                throw new BadRequestException("Cannot update already sold product");
-
-            var oldProduct = product;
-
             var categoryExists = await _unitOfWork.Categories.Exists(request.ProductDto.CategoryId);
             if(!categoryExists)
                 throw new NotFoundException("Category", request.ProductDto.CategoryId);
+
+            var product = await _unitOfWork.Products.GetById(request.ProductDto.Id)
+                ??  throw new NotFoundException(nameof(Product), request.ProductDto.Id);
 
             if (request.ProductDto.Images.Count != 0)
             {
@@ -78,10 +73,6 @@ namespace Netgo.Application.Features.Products.Handlers.Command
             }
 
             await _unitOfWork.Products.Update(mappedProduct);
-            product.Updated(oldProduct);
-
-            if (product.DateSold != null)
-                product.Sold();
 
             return Result.Success();
         }

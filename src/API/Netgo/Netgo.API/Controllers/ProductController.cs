@@ -1,8 +1,6 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.RateLimiting;
-using Netgo.Application.Common;
 using Netgo.Application.DTOs.Product;
 using Netgo.Application.Features.Products.Requests.Command;
 using Netgo.Application.Features.Products.Requests.Query;
@@ -11,7 +9,6 @@ namespace Netgo.API.Controllers
 {
     [ApiController]
     [Route("api/products")]
-    [EnableRateLimiting("sliding")]
     public class ProductController : ControllerBase
     {
         private readonly IMediator _mediator;
@@ -22,9 +19,9 @@ namespace Netgo.API.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetProducts([FromQuery] GetProductsDTO filter)
+        public async Task<IActionResult> GetProducts()
         {
-            var request = new GetProductsQuery { Filter = filter};
+            var request = new GetProductsQuery();
             var result = await _mediator.Send(request);
             return new ResultActionResult(result);
         }
@@ -38,7 +35,7 @@ namespace Netgo.API.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = UserRoles.Admin)]
+        //[Authorize]
         public async Task<IActionResult> CreateProduct(CreateProductDTO product)
         {
             var request = new CreateProductCommand { ProductDto = product };
@@ -47,7 +44,7 @@ namespace Netgo.API.Controllers
         }
 
         [HttpPut]
-        [Authorize(Roles = UserRoles.Admin)]
+        //[Authorize]
         public async Task<IActionResult> UpdateProduct(UpdateProductDTO product)
         {
             var request = new UpdateProductCommand { ProductDto = product };

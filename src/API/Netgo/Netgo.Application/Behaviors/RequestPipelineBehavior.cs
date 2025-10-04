@@ -24,11 +24,10 @@ namespace Netgo.Application.Behaviors
 
         public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
         {
-
-            var requestName = typeof(TRequest).Name;
             try
             {
                 var sw = Stopwatch.StartNew();
+                var requestName = typeof(TRequest).Name;
 
                 TResponse response;
 
@@ -53,9 +52,9 @@ namespace Netgo.Application.Behaviors
                     throw new InvalidOperationException($"Handler for {requestName} returned null response.");
 
                 var duration = sw.Elapsed;
-                    
+
                 _logger.LogInformation(
-                    "Request '{Request}' executed in {Duration:F2} ms",
+                    "Request {RequestName} executed in {Duration:F2} ms",
                     requestName,
                     duration.TotalMilliseconds
                 );
@@ -65,49 +64,36 @@ namespace Netgo.Application.Behaviors
             }
             catch (Exception ex)
             {
-                var statusCode = ex switch
+                switch(ex)
                 {
-                    NotFoundException => 404,
-                    ValidationException => 400,
-                    BadRequestException => 400,
-                    UnauthorizedException => 401,
-                    _ => 500
-                };
+                    case NotFoundException:
+                        return CreateFailureResponse(ex.Message, 404);
+                    case ValidationException:
+                        return CreateFailureResponse(ex.Message, 400);
+                    case BadRequestException:
+                        return CreateFailureResponse(ex.Message, 400);
+                    case UnauthorizedException:
+                        return CreateFailureResponse(ex.Message, 401);
 
-                if (statusCode == 500)
-                {
-                    _logger.LogError(
-                        ex,
-                        "An unhandled exception occurred while processing {RequestType}.",
-                        typeof(TRequest).Name);
+                    default:{
+                        _logger.LogCritical(
+                            ex,
+                            "An unhandled exception occurred while processing {RequestType}.",
+                            typeof(TRequest).Name);
 
-                    return CreateFailureResponse(statusCode, "Internal server error");
+                        return CreateFailureResponse("Inrernal Server Exception", 500);
+                    }
                 }
-
-                _logger.LogWarning("" +
-                    "Request '{Request}' failed with StatusCode: {StatusCode}.", 
-                    requestName, 
-                    statusCode);
-
-                return CreateFailureResponse(statusCode, ex.Message);
             }
         }
 
-
-        private TResponse CreateFailureResponse(int status, string message)
+        private static TResponse CreateFailureResponse(string errorMessage, int statusCode)
         {
-            if (typeof(TResponse).IsGenericType &&
-                typeof(TResponse).GetGenericTypeDefinition() == typeof(Result<>))
-            {
-                var resultType = typeof(TResponse);
-                var method = resultType.GetMethod("Failure", new[] { typeof(string), typeof(int) })
-                    ?? throw new InvalidOperationException("Failure method not found");
-
-                return (TResponse)method.Invoke(null, [message, status])!;
-            }
-
-
-            return (TResponse)(object)Result.Failure(message, status);
+            var responseType = typeof(TResponse);
+            var method = responseType.GetMethod("Failure", [typeof(string), typeof(int)]);
+            var res = (TResponse)method.Invoke(null, [errorMessage, statusCode])
+                ?? throw new InvalidOperationException();
+            return res;
         }
     }
 }

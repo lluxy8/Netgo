@@ -1,6 +1,4 @@
-﻿using Netgo.Application.Common;
-using Netgo.Domain.Common;
-using System.Linq.Expressions;
+﻿using Netgo.Domain.Common;
 
 namespace Netgo.Application.Contracts.Persistence
 {
@@ -8,10 +6,6 @@ namespace Netgo.Application.Contracts.Persistence
     {
         Task<T?> GetById(Guid Id);
         Task<IReadOnlyList<T>> GetAll();
-        Task<PagedResult<T>> GetAllFilteredPaged(
-            Expression<Func<T, bool>>? filter = null,
-            int page = 1,
-            int pageSize = 10);
         Task<bool> Exists(Guid Id);
         Task Insert(T entity);
         Task Update(T entity);

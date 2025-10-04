@@ -1,8 +1,5 @@
 ﻿using MediatR;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.RateLimiting;
-using Netgo.Application.Common;
 using Netgo.Application.DTOs.Category;
 using Netgo.Application.Features.Category.Requests.Command;
 using Netgo.Application.Features.Category.Requests.Query;
@@ -11,7 +8,7 @@ namespace Netgo.API.Controllers
 {
     [ApiController]
     [Route("api/categories")]
-    [EnableRateLimiting("sliding")]
+    //[Authorize]
     public class CategoryController : ControllerBase
     {
         private readonly IMediator _mediator;
@@ -39,7 +36,6 @@ namespace Netgo.API.Controllers
 
 
         [HttpPost]
-        [Authorize(Roles = UserRoles.Admin)]
         public async Task<IActionResult> Create([FromBody] CategoryCreateDTO dto)
         {
             var command = new CreateCategoryCommand { CategoryDto = dto };
@@ -48,7 +44,6 @@ namespace Netgo.API.Controllers
         }
 
         [HttpPut]
-        [Authorize(Roles = UserRoles.Admin)]
         public async Task<IActionResult> Update([FromBody] CategoryUpdateDTO dto)
         {
             var request = new UpdateCategoryCommand { CategoryDTO = dto };
@@ -57,7 +52,6 @@ namespace Netgo.API.Controllers
         }
 
         [HttpDelete("{id:guid}")]
-        [Authorize(Roles = UserRoles.Admin)]
         public async Task<IActionResult> Delete(Guid id)
         {
             var request = new DeleteCategoryCommand { Id = id };
