@@ -23,7 +23,7 @@ namespace Netgo.API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateMessage(CreateMessageDTO message)
+        public async Task<IActionResult> CreateMessage([FromBody] CreateMessageDTO message)
         {
             var request = new CreateMessageCommand { MessageDTO = message };
             var result = await _mediator.Send(request);
@@ -40,7 +40,7 @@ namespace Netgo.API.Controllers
         }
 
         [HttpPut]
-        public async Task<IActionResult> UpdateMessage(UpdateMessageDTO message)
+        public async Task<IActionResult> UpdateMessage([FromBody] UpdateMessageDTO message)
         {
             var request = new UpdateMessageCommand { MessageDTO = message };
             var result = await _mediator.Send(request);
@@ -56,7 +56,7 @@ namespace Netgo.API.Controllers
             return new ResultActionResult(result);
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{id:guid}")]
         public async Task<IActionResult> GetChatById(Guid id)
         {
             var request = new GetChatByIdQuery { Id = id };
@@ -64,12 +64,23 @@ namespace Netgo.API.Controllers
             return new ResultActionResult(result);
         }
 
-        [HttpGet("user/{id}")]
+        [HttpGet("user/{id:guid}")]
         public async Task<IActionResult> GetChatByUserId(Guid id)
         {
             var request = new GetChatsByUserIdQuery { Id = id };
             var result = await _mediator.Send(request);
             return new ResultActionResult(result);
         }
+<<<<<<< Updated upstream
+=======
+
+        [HttpDelete("{id:guid}")]
+        public async Task<IActionResult> DeleteMessage(Guid id)
+        {
+            var request = new DeleteMessageCommand { Id = id };
+            var result = await _mediator.Send(request);
+            return new ResultActionResult(result);
+        }
+>>>>>>> Stashed changes
     }
 }

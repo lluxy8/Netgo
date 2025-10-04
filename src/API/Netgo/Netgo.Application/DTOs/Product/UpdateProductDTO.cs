@@ -12,5 +12,6 @@ namespace Netgo.Application.DTOs.Product
         public List<ProductDetailDto> Details { get; set; }
         public List<IFormFile> NewImages { get; set; }
         public List<string> Images { get; set; }
+        public bool Archieved { get; set; }
     }
 }

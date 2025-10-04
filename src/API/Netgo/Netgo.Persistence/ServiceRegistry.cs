@@ -10,6 +10,7 @@ namespace Netgo.Persistence
     {
         public static IServiceCollection AddPersistenceServices(this IServiceCollection services, IConfiguration configuration)
         {
+            var asd = configuration.GetConnectionString("MasterDb");
             services.AddDbContext<NetgoDbContext>(o =>
                 o.UseSqlServer(
                     configuration.GetConnectionString("MasterDb"),

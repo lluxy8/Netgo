@@ -26,7 +26,7 @@ namespace Netgo.API.Controllers
             return new ResultActionResult(result);
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{id:guid}")]
         public async Task<IActionResult> GetProductById(Guid id)
         {
             var request = new GetProductByIdQuery { Id = id };
@@ -35,8 +35,13 @@ namespace Netgo.API.Controllers
         }
 
         [HttpPost]
+<<<<<<< Updated upstream
         //[Authorize]
         public async Task<IActionResult> CreateProduct(CreateProductDTO product)
+=======
+        [Authorize(Roles = UserRoles.Admin)]
+        public async Task<IActionResult> CreateProduct([FromBody] CreateProductDTO product)
+>>>>>>> Stashed changes
         {
             var request = new CreateProductCommand { ProductDto = product };
             var result = await _mediator.Send(request);
@@ -44,21 +49,33 @@ namespace Netgo.API.Controllers
         }
 
         [HttpPut]
+<<<<<<< Updated upstream
         //[Authorize]
         public async Task<IActionResult> UpdateProduct(UpdateProductDTO product)
+=======
+        [Authorize(Roles = UserRoles.Admin)]
+        public async Task<IActionResult> UpdateProduct([FromBody] UpdateProductDTO product)
+>>>>>>> Stashed changes
         {
             var request = new UpdateProductCommand { ProductDto = product };
             var result = await _mediator.Send(request);
             return new ResultActionResult(result);
         }
 
-        [HttpGet("user/{userId}")]
-        public async Task<IActionResult> GetProductsByUserId(Guid userId)
+        [HttpGet("user/{id:guid}")]
+        public async Task<IActionResult> GetProductsByUserId(Guid id)
         {
-            var request = new GetUserProductsQuery { Id = userId };
+            var request = new GetUserProductsQuery { Id = id };
             var result = await _mediator.Send(request);
             return new ResultActionResult(result);
         }
 
+        [HttpGet("{id:guid}/withowner")]
+        public async Task<IActionResult> GetProductWithOwner(Guid id)
+        {
+            var request = new GetProductWithOwnerQuery { ProductId = id };
+            var result = await _mediator.Send(request);
+            return new ResultActionResult(result);
+        }
     }
 }

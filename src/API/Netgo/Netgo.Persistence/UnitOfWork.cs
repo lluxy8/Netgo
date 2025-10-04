@@ -42,6 +42,33 @@ namespace Netgo.Persistence
             return await _context.SaveChangesAsync(cancellationToken);
         }
 
+<<<<<<< Updated upstream
+=======
+        public async Task DispatchDomainEventsAsync(CancellationToken cancellation = default)
+        {
+            var entities = _context.ChangeTracker
+                .Entries<DomainEntity>()
+                .Where(x => x.Entity.DomainEvents != null && x.Entity.DomainEvents.Count != 0);
+
+            var events = entities
+                .SelectMany(x => x.Entity.DomainEvents)
+                .ToList();
+
+            entities.ToList()
+                .ForEach(x => x.Entity.ClearDomainEvents());
+
+            foreach (var @event in events)
+            {
+                await _mediator.Publish(@event, cancellation);
+            }
+
+            foreach(var entity in entities)
+            {
+                entity.Entity.ClearDomainEvents();
+            }
+        }
+
+>>>>>>> Stashed changes
         public async Task CommitTransactionAsync(CancellationToken cancellationToken = default)
         {
             if (_currentTransaction == null) return;

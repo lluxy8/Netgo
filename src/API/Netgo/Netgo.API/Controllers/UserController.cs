@@ -16,7 +16,7 @@ namespace Netgo.API.Controllers
             _mediator = mediator;
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{id:guid}")]
         public async Task<IActionResult> GetUserById(Guid id)
         {
             var request = new GetUserByIdQuery { Id = id };

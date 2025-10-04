@@ -72,6 +72,10 @@ namespace Netgo.Application.Features.Products.Handlers.Command
                 detail.ProductId = mappedProduct.Id;
             }
 
+            mappedProduct.DateArchived = request.ProductDto.Archieved
+                ? DateTime.UtcNow
+                : null;
+
             await _unitOfWork.Products.Update(mappedProduct);
 
             return Result.Success();

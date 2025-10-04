@@ -39,7 +39,7 @@ namespace Netgo.Application.Features.Category.Handlers.Command
                 foreach (var product in category.Products)
                 {
                     categoryToMove.Products.Add(product);
-                    _logger.LogInformation("[{num}] ({id}) Moving...", i, product.Id);
+                    _logger.LogInformation("Category[{num}] ({id}) Moving...", i, product.Id);
                     i++;
                 }
 

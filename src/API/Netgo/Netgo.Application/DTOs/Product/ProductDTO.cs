@@ -12,5 +12,6 @@
         public DateTime? DateSold { get; set; }
         public List<ProductDetailDto> Details { get; set; }
         public List<string> Images { get; set; }
+        public DateTime? DateArchived { get; set; } = null;
     }
 }

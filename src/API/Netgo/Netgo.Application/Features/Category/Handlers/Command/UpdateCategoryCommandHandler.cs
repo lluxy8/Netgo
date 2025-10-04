@@ -25,7 +25,7 @@ namespace Netgo.Application.Features.Category.Handlers.Command
         public async Task<Result> Handle(UpdateCategoryCommand request, CancellationToken cancellationToken)
         {
             var valdiator = new CategoryUpdateDTOValidatior();
-            var validationResult = await valdiator.ValidateAsync(request.CategoryDTO);
+            var validationResult = await valdiator.ValidateAsync(request.CategoryDTO, cancellationToken);
 
             if (!validationResult.IsValid)
                 throw new ValidationException(validationResult);

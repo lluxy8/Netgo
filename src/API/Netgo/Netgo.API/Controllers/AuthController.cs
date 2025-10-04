@@ -21,7 +21,7 @@ namespace Netgo.API.Controllers
 
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login(AuthRequest auth)
+        public async Task<IActionResult> Login([FromBody] AuthRequest auth)
         {
             var request = new LoginUserCommand { AuthRequest = auth };
             var result = await _mediator.Send(request);
@@ -41,14 +41,14 @@ namespace Netgo.API.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register(RegistrationRequest register)
+        public async Task<IActionResult> Register([FromBody] RegistrationRequest register)
         {
             var request = new RegisterUserCommand { RegistrationRequest = register };
             var result = await _mediator.Send(request);
             return new ResultActionResult(result);
         }
 
-        [HttpPost("passwordresettoken/{id}")]
+        [HttpPost("passwordresettoken/{id:guid}")]
         public async Task<IActionResult> ResetPasswordToken(Guid id, [FromBody] string oldPassword)
         {
             var request = new CreatePasswordResetTokenQuery { Id = id, Password = oldPassword };
@@ -56,10 +56,10 @@ namespace Netgo.API.Controllers
             return new ResultActionResult(result);
         }
 
-        [HttpPost("passwordreset/{id}")]
+        [HttpPost("passwordreset/{id:guid}/{token}")]
         public async Task<IActionResult> ResetPasswordConfirm(
             Guid id,
-            [FromQuery] string token,
+            string token,
             [FromBody] string newPassword)
         {
             var request = new ConfirmUserPasswordResetCommand { UserId = id, NewPassword = newPassword, Token = token };
@@ -69,7 +69,7 @@ namespace Netgo.API.Controllers
 
 
         [Authorize]
-        [HttpPost("emailconfirmtoken/{id}")]
+        [HttpPost("emailconfirmtoken/{id:guid}")]
         public async Task<IActionResult> EmailConfirmToken(Guid id)
         {
             var request = new CreateUserEmailTokenQuery { Id = id };
@@ -78,8 +78,8 @@ namespace Netgo.API.Controllers
         }
 
         [Authorize]
-        [HttpPost("emailconfirm/{id}")]
-        public async Task<IActionResult> Emailconfirm(Guid id, [FromQuery] string token)
+        [HttpPost("emailconfirm/{id:guid}/{token}")]
+        public async Task<IActionResult> Emailconfirm(Guid id, string token)
         {
             var request = new ConfirmUserEmailCommand { UserId = id, Token = token, };
             var result = await _mediator.Send(request);

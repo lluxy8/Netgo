@@ -10,6 +10,9 @@ namespace Netgo.Persistence.Configuration
         {
             builder.HasKey(x => x.Id);
 
+            builder.Property(p => p.DateArchived)
+                .HasColumnName("DateArchived");
+
             builder.Property(x => x.Title)
                 .IsRequired()
                 .HasMaxLength(100);

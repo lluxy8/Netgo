@@ -4,6 +4,13 @@ using Netgo.Application;
 using Netgo.Identity;
 using Netgo.Infrastructure;
 using Netgo.Persistence;
+<<<<<<< Updated upstream
+=======
+using Serilog;
+using System.Reflection;
+using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
+>>>>>>> Stashed changes
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,7 +22,12 @@ builder.Services.AddApplicationServices();
 
 builder.Services.AddSignalR();
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+        .AddJsonOptions(options =>
+        {
+            options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+        });
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -47,7 +59,7 @@ builder.Services.AddCors(builder =>
 {
     builder.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:3000") 
+        policy.WithOrigins("http://localhost:5173") 
               .AllowCredentials() 
               .AllowAnyHeader()
               .AllowAnyMethod();
