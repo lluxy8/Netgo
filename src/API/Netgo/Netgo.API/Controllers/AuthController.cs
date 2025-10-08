@@ -43,7 +43,7 @@ namespace Netgo.API.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register(RegistrationRequest register)
+        public async Task<IActionResult> Register([FromForm] RegistrationRequest register)
         {
             var request = new RegisterUserCommand { RegistrationRequest = register };
             var result = await _mediator.Send(request);

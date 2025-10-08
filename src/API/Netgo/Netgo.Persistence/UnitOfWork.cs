@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Logging;
 using Netgo.Application.Contracts.Persistence;
 using Netgo.Domain.Common;
 
@@ -10,6 +11,7 @@ namespace Netgo.Persistence
         private readonly NetgoDbContext _context;
         private readonly IMediator _mediator;
         private IDbContextTransaction? _currentTransaction;
+        private readonly ILogger<UnitOfWork> _logger;
 
         public IProductRepository Products { get; }
         public IProductDetailRepository ProductDetails { get; }
@@ -24,8 +26,10 @@ namespace Netgo.Persistence
             ICategoryRepository categories,
             IChatRepository chats,
             IMessageRepository messages,
-            IMediator mediator)
+            IMediator mediator,
+            ILogger<UnitOfWork> logger)
         {
+            _logger = logger;
             _context = context;
             _mediator = mediator;
             Products = products;
@@ -80,19 +84,34 @@ namespace Netgo.Persistence
             }
             finally
             {
-                await _currentTransaction.DisposeAsync();
-                _currentTransaction = null;
+                await DisposeTransaction();
             }
         }
 
         public async Task RollbackTransactionAsync(CancellationToken cancellationToken = default)
         {
-            if (_currentTransaction != null)
+            if (_currentTransaction == null)
+                return;
+
+            try
             {
                 await _currentTransaction.RollbackAsync(cancellationToken);
-                await _currentTransaction.DisposeAsync();
-                _currentTransaction = null;
             }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "An error occured while rollbak transaction. Transaction already completed?");
+            }
+            finally
+            {
+                await DisposeTransaction();
+            }
+        }
+
+        public async Task DisposeTransaction()
+        {
+            if (_currentTransaction != null)
+                await _currentTransaction.DisposeAsync();
+            _currentTransaction = null;
         }
 
         public async ValueTask DisposeAsync()

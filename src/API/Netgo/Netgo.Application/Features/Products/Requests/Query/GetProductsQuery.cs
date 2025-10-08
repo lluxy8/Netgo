@@ -4,8 +4,8 @@ using Netgo.Application.DTOs.Product;
 
 namespace Netgo.Application.Features.Products.Requests.Query
 {
-    public class GetProductsQuery : IRequest<Result<List<ListProductDTO>>>
+    public class GetProductsQuery : IRequest<Result<PagedResult<ListProductDTO>>>
     {
-        public required GetProductsDTO Filter { get; set; }
+        public required GetProductsFilterDTO Filter { get; set; }
     }
 }

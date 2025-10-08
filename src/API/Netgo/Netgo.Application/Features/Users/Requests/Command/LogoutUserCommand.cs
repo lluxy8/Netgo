@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using MediatR;
+using Netgo.Application.Common;
 
 namespace Netgo.Application.Features.Users.Requests.Command
 {
-    public class LogoutUserCommand
+    public class LogoutUserCommand : IRequest<Result>
     {
-        public required string Token { get; set; }
+        public required string UserId { get; set; }
     }
 }

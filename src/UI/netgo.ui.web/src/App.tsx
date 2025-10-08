@@ -1,41 +1,30 @@
-import './App.css'
-import { Link, Outlet, Route, Routes } from 'react-router-dom'
-import { LoginPage } from './pages/LoginPage'
-import { RegisterPage } from './pages/RegisterPage'
-import { ProductsPage } from './pages/ProductsPage'
-import { ProductCreatePage } from './pages/ProductCreatePage'
-import { ProfilePage } from './pages/ProfilePage'
-
-function Layout() {
-  return (
-    <div>
-      <nav style={{ display: 'flex', gap: 12, padding: 12, borderBottom: '1px solid #eee' }}>
-        <Link to="/">Products</Link>
-        <Link to="/products/new">New Product</Link>
-        <Link to="/profile">Profile</Link>
-        <span style={{ marginLeft: 'auto', display: 'flex', gap: 12 }}>
-          <Link to="/login">Login</Link>
-          <Link to="/register">Register</Link>
-        </span>
-      </nav>
-      <main style={{ padding: 16 }}>
-        <Outlet />
-      </main>
-    </div>
-  )
-}
+import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import HomePage from './pages/Home'
+import LoginPage from './pages/Login'
+import RegisterPage from './pages/Register'
+import NotFoundPage from './pages/NotFound'
+import MePage from './pages/Me'
+import ProductsPage from './pages/Products'
+import CreatePage from './pages/Create'
+import { DetailsPage } from './pages/Details'
+import EditPage from './pages/Edit'
 
 function App() {
   return (
-    <Routes>
-      <Route element={<Layout />}> 
-        <Route index element={<ProductsPage />} />
-        <Route path="products/new" element={<ProductCreatePage />} />
-        <Route path="profile" element={<ProfilePage />} />
-        <Route path="login" element={<LoginPage />} />
-        <Route path="register" element={<RegisterPage />} />
-      </Route>
-    </Routes>
+    <BrowserRouter>
+      <Routes>
+        <Route path='/' element={<HomePage/>}></Route>        
+        <Route path='*' element={<NotFoundPage/>}></Route>
+
+        <Route path='login' element={<LoginPage/>}></Route>
+        <Route path='register' element={<RegisterPage/>}></Route>
+        <Route path='products' element={<ProductsPage />}></Route>
+        <Route path='me' element={<MePage/>}></Route>
+        <Route path='create' element={<CreatePage/>}></Route>
+        <Route path='edit:/id' element={<EditPage/>}></Route>
+        <Route path='details/:id' element={<DetailsPage/>}></Route>
+      </Routes>
+    </BrowserRouter>
   )
 }
 

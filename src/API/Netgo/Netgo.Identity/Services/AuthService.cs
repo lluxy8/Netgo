@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Netgo.Application.Common;
 using Netgo.Application.Contracts.Identity;
+using Netgo.Application.Contracts.Infrastructure;
 using Netgo.Application.Exceptions;
 using Netgo.Application.Models.Identity;
 using Netgo.Identity.Common;
@@ -18,16 +20,18 @@ namespace Netgo.Identity.Services
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly JwtSettings _jwtSettings;
+        private readonly IFileService _fileService;
 
         public AuthService(UserManager<
             ApplicationUser> userManager, 
             SignInManager<ApplicationUser> signInManager,
-            IOptions<JwtSettings> jwtSettings
-            )
+            IOptions<JwtSettings> jwtSettings,
+            IFileService fileService            )
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _jwtSettings = jwtSettings.Value;
+            _fileService = fileService;
         }
 
         public async Task<AuthResponse> Login(AuthRequest request)
@@ -64,7 +68,7 @@ namespace Netgo.Identity.Services
                 username = GetUsername(request.FirstName, request.LastName);
                 existingUser = await _userManager.FindByNameAsync(username);
             }
-
+          
             var user = new ApplicationUser
             {
                 Email = request.Email,
@@ -73,7 +77,7 @@ namespace Netgo.Identity.Services
                 Location = request.Location,
                 LastName = request.LastName,
                 UserName = username,
-                ProfilePictureURL = request.ProfilePicture,
+                ProfilePictureURL = "https://static.vecteezy.com/system/resources/thumbnails/004/511/281/small_2x/default-avatar-photo-placeholder-profile-picture-vector.jpg",
                 EmailConfirmed = true
             };
 
@@ -86,6 +90,11 @@ namespace Netgo.Identity.Services
                 if (result.Succeeded)
                 {
                     await _userManager.AddToRoleAsync(user, UserRoles.User);
+
+                    var pp = await _fileService.SaveFileAsync(user.Id, request.ProfilePicture);
+                    user.ProfilePictureURL = pp;
+                    await _userManager.UpdateAsync(user);
+
                     return new RegistrationResponse() { UserId = user.Id };
                 }
                 else
@@ -102,9 +111,33 @@ namespace Netgo.Identity.Services
 
         private static string GetUsername(string firstName, string lastName)
         {
-            string usrname = $"{firstName}{lastName}{RandomDigitGenerator.Generate(12)}";
+            string usrname = $"{firstName}{lastName}{RandomDigitGenerator.Generate(5)}";
             return usrname;
         }
+
+        public string? GetUserIdByToken(string token)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Key));
+
+            var validationParams = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+
+                //ValidIssuer = _jwtSettings.Issuer,
+                ValidAudience = _jwtSettings.Audience,
+                IssuerSigningKey = key
+            };
+
+            var principal = tokenHandler.ValidateToken(token, validationParams, out SecurityToken validatedToken);
+            var claims = principal.Claims;
+            var idClaim = principal.Claims.FirstOrDefault(x => x.Type == CustomClaimTypes.Uid);
+            return idClaim?.Value;
+        }
+
 
         private async Task<JwtSecurityToken> GenerateToken(ApplicationUser user)
         {

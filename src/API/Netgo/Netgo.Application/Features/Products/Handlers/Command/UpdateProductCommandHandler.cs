@@ -31,14 +31,21 @@ namespace Netgo.Application.Features.Products.Handlers.Command
         }
         public async Task<Result> Handle(UpdateProductCommand request, CancellationToken cancellationToken)
         {
+            var product = await _unitOfWork.Products.GetById(request.ProductDto.Id)
+                ?? throw new NotFoundException(nameof(Product), request.ProductDto.Id);
+
+            var authorized = product.UserId.ToString() == request.UserId;
+
+            if (!authorized)
+                throw new UnauthorizedAccessException("");
+
             var validator = new UpdateProductDTOValidator();
             var validationResult = await validator.ValidateAsync(request.ProductDto, cancellationToken);
 
             if (!validationResult.IsValid)
                 throw new ValidationException(validationResult);
 
-            var product = await _unitOfWork.Products.GetById(request.ProductDto.Id)
-                ?? throw new NotFoundException(nameof(Product), request.ProductDto.Id);
+
 
             if (product.DateSold != null)
                 throw new BadRequestException("Cannot update already sold product");

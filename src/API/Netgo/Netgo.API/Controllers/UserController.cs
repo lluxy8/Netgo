@@ -3,9 +3,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Netgo.Application.Common;
+using Netgo.Application.Contracts.Identity;
 using Netgo.Application.DTOs.User;
 using Netgo.Application.Features.Users.Requests.Command;
 using Netgo.Application.Features.Users.Requests.Query;
+using System.Security.Claims;
 
 namespace Netgo.API.Controllers
 {
@@ -15,15 +17,17 @@ namespace Netgo.API.Controllers
     public class UserController : ControllerBase
     {
         private readonly IMediator _mediator;
-        public UserController(IMediator mediator)
+        private readonly IAuthService _authService;
+        public UserController(IMediator mediator, IAuthService authService)
         {
             _mediator = mediator;
+            _authService = authService;
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetUserById(Guid id)
         {
-            var request = new GetUserByIdQuery { Id = id };
+            var request = new GetUserByIdQuery { Id = id.ToString() };
             var result = await _mediator.Send(request);
             return new ResultActionResult(result);
         }
@@ -33,6 +37,30 @@ namespace Netgo.API.Controllers
         public async Task<IActionResult> UpdateUser(UpdateUserDTO user)
         {
             var request = new UpdateUserCommand { UpdateUsertDTO = user };
+            var result = await _mediator.Send(request);
+            return new ResultActionResult(result);
+        }
+
+        [HttpGet("me")]
+        [Authorize(Roles = UserRoles.User)]
+        public async Task<IActionResult> Me()
+        {
+            var id = User.FindFirstValue(CustomClaimTypes.Uid);
+            if (id is null)
+                return Unauthorized();
+
+            var request = new GetUserByIdQuery { Id = id };
+            var result = await _mediator.Send(request);
+            return new ResultActionResult(result);
+        }
+
+        [HttpPost("logout")]
+        public async Task<IActionResult> LogOut()
+        {
+            var id = User.FindFirstValue(CustomClaimTypes.Uid);
+            if (id is null)
+                return Forbid();
+            var request = new LogoutUserCommand { UserId = id };
             var result = await _mediator.Send(request);
             return new ResultActionResult(result);
         }

@@ -12,6 +12,7 @@ namespace Netgo.Application.Contracts.Identity
         Task<bool> CheckPassword(string userId, string password);
         Task<string> GeneratePasswordResetToken(string userId, string oldPassword);
         Task<bool> UpdateUser(User user);
+        Task Logout(string userId);
         Task<bool> DeleteUser(string userId);
         Task<bool> UpdateVerifiedUserSellerState(string userId, bool verified);
         Task<bool>ConfirmEmail(string userId, string token);

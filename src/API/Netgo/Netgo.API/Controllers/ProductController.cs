@@ -4,8 +4,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Netgo.Application.Common;
 using Netgo.Application.DTOs.Product;
+using Netgo.Application.Features.Products.Handlers.Query;
 using Netgo.Application.Features.Products.Requests.Command;
 using Netgo.Application.Features.Products.Requests.Query;
+using System.Security.Claims;
 
 namespace Netgo.API.Controllers
 {
@@ -22,9 +24,21 @@ namespace Netgo.API.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetProducts([FromQuery] GetProductsDTO filter)
+        public async Task<IActionResult> GetProducts([FromQuery] GetProductsFilterDTO filter)
         {
             var request = new GetProductsQuery { Filter = filter};
+            var result = await _mediator.Send(request);
+            return new ResultActionResult(result);
+        }
+
+        [HttpGet("myproducts")]
+        public async Task<IActionResult> GetMyProducts(GetProductsFilterDTO filter)
+        {
+            var id = User.FindFirstValue(CustomClaimTypes.Uid);
+            if (id is null)
+                return Unauthorized();
+
+            var request = new GetUserProductsQuery { Id = Guid.Parse(id), Filter = filter };
             var result = await _mediator.Send(request);
             return new ResultActionResult(result);
         }
@@ -38,30 +52,39 @@ namespace Netgo.API.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = UserRoles.Admin)]
-        public async Task<IActionResult> CreateProduct(CreateProductDTO product)
+        [Authorize]
+        public async Task<IActionResult> CreateProduct([FromForm] CreateProductDTO product)
         {
-            var request = new CreateProductCommand { ProductDto = product };
+            var id = User.FindFirstValue(CustomClaimTypes.Uid);
+            if (id is null)
+                return Forbid();
+
+            var request = new CreateProductCommand { UserId = id, ProductDto = product };
             var result = await _mediator.Send(request);
             return new ResultActionResult(result);
         }
 
         [HttpPut]
-        [Authorize(Roles = UserRoles.Admin)]
-        public async Task<IActionResult> UpdateProduct(UpdateProductDTO product)
+        [Authorize]
+        public async Task<IActionResult> UpdateProduct([FromForm] UpdateProductDTO product)
         {
-            var request = new UpdateProductCommand { ProductDto = product };
+            var id = User.FindFirstValue(CustomClaimTypes.Uid);
+            if (id is null)
+                return Forbid();
+
+            var request = new UpdateProductCommand { UserId = id, ProductDto = product };
             var result = await _mediator.Send(request);
             return new ResultActionResult(result);
         }
 
         [HttpGet("user/{userId}")]
-        public async Task<IActionResult> GetProductsByUserId(Guid userId)
+        public async Task<IActionResult> GetProductsByUserId(Guid userId, GetProductsFilterDTO filter)
         {
-            var request = new GetUserProductsQuery { Id = userId };
+            var request = new GetUserProductsQuery { Id = userId, Filter = filter };
             var result = await _mediator.Send(request);
             return new ResultActionResult(result);
         }
+
 
     }
 }

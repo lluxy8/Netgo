@@ -1,7 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Netgo.Application.Common;
 using Netgo.Application.Contracts.Persistence;
+using Netgo.Application.Models;
 using Netgo.Domain.Common;
+using Netgo.Persistence.Helper;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -35,33 +37,33 @@ namespace Netgo.Persistence.Repositories
                 .ToListAsync();
         }
 
-        public async Task<PagedResult<T>> GetAllFilteredPaged(
-            Expression<Func<T, bool>>? filter = null,
-            int page = 1,
-            int pageSize = 10)
+        public async Task<PagedResult<T>> GetAllFilteredPaged(PagedFilter<T> filter)
         {
             IQueryable<T> query = _context.Set<T>().AsNoTracking();
 
-            if (filter != null)
-                query = query.Where(filter);
+            if (filter.Filter != null)
+                query = query.Where(filter.Filter);
 
             var totalCount = await query.CountAsync();
-
+            Queries.GetPaged<T>(query, filter.Page, filter.PageSize);
             var items = await query
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
                 .OrderByDescending(x => x.DateCreated)
                 .ToListAsync();
+
+            int shownCount = filter.Page * filter.PageSize;
+            int remainingItems = totalCount - shownCount;
+            if (remainingItems < 0)
+                remainingItems = 0;
 
             return new PagedResult<T>
             {
                 Items = items,
                 TotalCount = totalCount,
-                Page = page,
-                PageSize = pageSize
+                RemainingCount = remainingItems,
+                Page = filter.Page,
+                PageSize = filter.PageSize
             };
         }
-
 
         public async Task<T?> GetById(Guid Id)
         {

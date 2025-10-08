@@ -9,8 +9,6 @@ namespace Netgo.Application.DTOs.Product.Validators
     {
         public CreateProductDTOValidator()
         {
-            RuleFor(x => x.UserId)
-                .NotEmpty().WithMessage("UserId cannot be empty.");
 
             RuleFor(x => x.Title)
                 .NotEmpty().WithMessage("Title cannot be empty.")

@@ -5,6 +5,7 @@ using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Netgo.Application.Common;
 using Netgo.Application.Contracts.Persistence;
+using Netgo.Application.Models;
 using Netgo.Domain;
 using Netgo.Persistence.Helper;
 using Newtonsoft.Json;
@@ -39,17 +40,14 @@ namespace Netgo.Persistence.Repositories
             return _decorated.GetAll();
         }
 
-        public async Task<PagedResult<Product>> GetAllFilteredPaged(
-            Expression<Func<Product, bool>>? filter = null,
-            int page = 1,
-            int pageSize = 10)
+        public async Task<PagedResult<Product>> GetAllFilteredPaged(PagedFilter<Product> filter)
         {         
-            string key = CacheKeyHelper.GenerateKey(filter, page, pageSize);
+            string key = CacheKeyHelper.GenerateKey(filter.Filter, filter.Page, filter.PageSize);
             string? cachedData = await _cache.GetStringAsync(key);
 
             if (string.IsNullOrEmpty(cachedData))
             {
-                var result = await _decorated.GetAllFilteredPaged(filter, page, pageSize);
+                var result = await _decorated.GetAllFilteredPaged(filter);
 
                 if (result is null || !result.Items.Any())
                     return result;
@@ -125,6 +123,31 @@ namespace Netgo.Persistence.Repositories
             return JsonConvert.DeserializeObject<List<Product>>(cachedData)!;
         }
 
+        public async Task<PagedResult<Product>> GetProductsByUserIdFilteredPaged(Guid userId, PagedFilter<Product> filter)
+        {
+            string key = $"{userId}-" + CacheKeyHelper.GenerateKey(filter.Filter, filter.Page, filter.PageSize);
+            string? cachedData = await _cache.GetStringAsync(key);
+
+            if (string.IsNullOrEmpty(cachedData))
+            {
+                var result = await _decorated.GetProductsByUserIdFilteredPaged(userId, filter);
+
+                if (result is null || !result.Items.Any())
+                    return result;
+
+                await _cache.SetStringAsync(
+                    key,
+                    JsonConvert.SerializeObject(result),
+                    new DistributedCacheEntryOptions
+                    {
+                        AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
+                    });
+
+                return result;
+            }
+
+            return JsonConvert.DeserializeObject<PagedResult<Product>>(cachedData)!;
+        }
 
         public async Task<Product?> GetProductWithDetails(Guid productId)
         {

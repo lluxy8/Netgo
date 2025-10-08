@@ -34,13 +34,13 @@ namespace Netgo.Application.Behaviors
 
                 if (requestName.Contains("Query"))
                 {
-                    response = await next();
+                    response = await next(cancellationToken);
                 }
                 else if (requestName.Contains("Command"))
                 {
                     await _unitOfWork.BeginTransactionAsync(cancellationToken);
 
-                    response = await next();
+                    response = await next(cancellationToken);
 
                     await _unitOfWork.CommitTransactionAsync(cancellationToken);
                 }
@@ -71,6 +71,7 @@ namespace Netgo.Application.Behaviors
                     ValidationException => 400,
                     BadRequestException => 400,
                     UnauthorizedException => 401,
+                    UnauthorizedAccessException => 403,
                     _ => 500
                 };
 
@@ -89,7 +90,8 @@ namespace Netgo.Application.Behaviors
                     requestName, 
                     statusCode);
 
-                return CreateFailureResponse(statusCode, ex.Message);
+                var response = CreateFailureResponse(statusCode, ex.Message);
+                return response;
             }
         }
 

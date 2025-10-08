@@ -1,1 +1,2 @@
-dotnet ef migrations add userRole --project Netgo.Identity --startup-project Netgo.API --context NetgoIdentityDbContext
+dotnet ef migrations add Init --project Netgo.Identity --startup-project Netgo.API --context NetgoIdentityDbContext
+dotnet ef migrations add Init --project Netgo.Persistence --startup-project Netgo.API --context NetgoDbContext 

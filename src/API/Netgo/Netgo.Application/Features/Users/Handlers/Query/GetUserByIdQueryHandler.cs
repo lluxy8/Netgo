@@ -18,7 +18,7 @@ namespace Netgo.Application.Features.Users.Handlers.Query
 
         public async Task<Result<User>> Handle(GetUserByIdQuery request, CancellationToken cancellationToken)
         {
-            var user = await _userService.GetUser(request.Id.ToString());
+            var user = await _userService.GetUser(request.Id);
             return Result<User>.Success(user);
         }
     }

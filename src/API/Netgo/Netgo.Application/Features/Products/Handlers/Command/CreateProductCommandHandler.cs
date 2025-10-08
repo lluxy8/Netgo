@@ -47,13 +47,15 @@ namespace Netgo.Application.Features.Products.Handlers.Command
             if (!categoryExists)
                 throw new NotFoundException("Category", request.ProductDto.CategoryId);
 
-            var userExists = await _userService.UserExists(request.ProductDto.UserId.ToString());
+            var userExists = await _userService.UserExists(request.UserId);
             if(!userExists)
-                throw new NotFoundException("User", request.ProductDto.UserId);
+                throw new NotFoundException("User", request.UserId);
 
             var product = _mapper.Map<Product>(request.ProductDto);
             product.Images = [];
             product.Details = _mapper.Map<List<ProductDetail>>(request.ProductDto.Details);
+            product.UserId = Guid.Parse(request.UserId);
+
             foreach (var detail in product.Details)
             {
                 detail.ProductId = product.Id;

@@ -6,6 +6,6 @@ namespace Netgo.Application.Features.Users.Requests.Query
 {
     public class GetUserByIdQuery : IRequest<Result<User>>
     {
-        public Guid Id { get; set; }
+        public required string Id { get; set; }
     }
 }

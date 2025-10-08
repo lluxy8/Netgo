@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using Netgo.Application.Common;
 using Netgo.Application.Contracts.Identity;
+using Netgo.Application.Contracts.Infrastructure;
 using Netgo.Application.DTOs.Product.Validators;
 using Netgo.Application.Exceptions;
 using Netgo.Application.Features.Users.Requests.Command;
@@ -11,10 +12,12 @@ namespace Netgo.Application.Features.Users.Handlers.Command
     public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand, Result<RegistrationResponse>>
     {
         private readonly IAuthService _authService;
+        private readonly IFileService _filseService;
 
-        public RegisterUserCommandHandler(IAuthService authService)
+        public RegisterUserCommandHandler(IAuthService authService, IFileService fileService)
         {
             _authService = authService;
+            _filseService = fileService;
         }
         public async Task<Result<RegistrationResponse>> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
         {
@@ -24,10 +27,12 @@ namespace Netgo.Application.Features.Users.Handlers.Command
                 .ValidateAsync(request.RegistrationRequest,
                 cancellationToken);
 
-            if (validationResult.IsValid)
+            if (!validationResult.IsValid)
                 throw new ValidationException(validationResult);
 
+
             var result = await _authService.Register(request.RegistrationRequest);
+
             return Result<RegistrationResponse>.Success(result);
         }
     }

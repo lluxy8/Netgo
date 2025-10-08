@@ -6,7 +6,10 @@ using Netgo.Application.Contracts.Persistence;
 using Netgo.Application.DTOs.Product;
 using Netgo.Application.Exceptions;
 using Netgo.Application.Features.Products.Requests.Query;
+using Netgo.Application.Filters;
+using Netgo.Application.Models;
 using Netgo.Application.Models.Identity;
+using Netgo.Domain;
 
 namespace Netgo.Application.Features.Products.Handlers.Query
 {
@@ -30,8 +33,15 @@ namespace Netgo.Application.Features.Products.Handlers.Query
             if (!userExists)
                 throw new NotFoundException(nameof(User), request.Id);
 
+            var filter = ProductFilter.Filter(request.Filter);
 
-            var products = await _unitOfWork.Products.GetProductsByUserId(request.Id);
+            var products = await _unitOfWork.Products.GetProductsByUserIdFilteredPaged(request.Id,
+                new PagedFilter<Product>
+                {
+                    Filter = filter,
+                    PageSize = request.Filter.PageSize,
+                    Page = request.Filter.Page
+                });
             var productsDto = _mapper.Map<List<ListProductDTO>>(products);
 
             return Result<List<ListProductDTO>>.Success(productsDto);
