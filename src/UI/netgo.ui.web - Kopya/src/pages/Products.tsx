@@ -242,7 +242,7 @@ export default function ProductsPage() {
     {/* Products */}
     <div className={`${showFilters ? "lg:col-span-4" : "lg:col-span-5"}`}>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
-        {products && products.items.length > 0 ? (
+        {!error && products && products.items.length > 0 && (
           products.items.map((product) => (
             <Card
               key={product.id}
@@ -282,7 +282,9 @@ export default function ProductsPage() {
               </CardContent>
             </Card>
           ))
-        ) : (
+        )}
+
+        {error || !products && (
           <div className="col-span-full text-center py-12">
             <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">Ürün bulunamadı</h3>
