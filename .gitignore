@@ -101,3 +101,5 @@ $RECYCLE.BIN/
 *.log
 *.bak
 *.orig
+
+Netgo/data/*
